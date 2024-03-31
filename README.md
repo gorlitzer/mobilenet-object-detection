@@ -4,8 +4,10 @@
 
 ```bash
 chmod +x ./setup.sh
+mkdir models && cd models
+mkdir MobileNetSSD && cd ../../
 ./setup.sh
-python3 venv -m venv-mobilenet
+python3 -m venv venv-mobilenet
 source venv-mobilenet/bin/activate
 pip install opencv-python
 python3 main.py # First run might fail due to missing camera permission
