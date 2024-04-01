@@ -11,7 +11,7 @@ chmod +x ./opencv/setup.sh && ./opencv/setup.sh
 python3 -m venv venv-mobilenet
 source venv-mobilenet/bin/activate
 pip install opencv-python
-python3 opencv/main.py # First run might fail due to missing camera permission
+cd opencv && python3 main.py # First run might fail due to missing camera permission
 ```
 
 ## Run the program with PICAMERA2 (so on your raspi)
@@ -22,7 +22,7 @@ sudo apt install -y python3-picamera2
 sudo apt install -y python3-opencv
 python3 -m venv --system-site-packages venv-mobilenet
 source venv-mobilenet/bin/activate
-python3 picamera2/main.py # First run might fail due to missing camera permission
+cd picamera2 && python3 main.py # First run might fail due to missing camera permission
 ```
 
 Break with `ESC` or by killing terminal process `CTRL + C` (linux and mac, dunno windows shell).

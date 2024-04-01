@@ -1,9 +1,38 @@
 #!/usr/bin/env python3
 
-# https://leoncode.co.uk/posts/object-detection-recognition-raspberry-pi-camera/
 import cv2
 from picamera2 import Picamera2
 import numpy as np
+import threading
+import time
+from http.server import BaseHTTPRequestHandler, HTTPServer
+
+
+class VideoStreamHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        if self.path == "/":
+            self.send_response(200)
+            self.send_header(
+                "Content-type", "multipart/x-mixed-replace; boundary=--frame"
+            )
+            self.end_headers()
+            self.stream()
+        else:
+            self.send_error(404)
+
+    def stream(self):
+        while True:
+            pc2array = picam2.capture_array()
+            pc2array = np.rot90(pc2array, 2).copy()
+            result, _ = objectRecognition(dnn, classNames, pc2array, 0.6, 0.6)
+            ret, buffer = cv2.imencode(".jpg", result)
+            frame = buffer.tobytes()
+            self.wfile.write(b"--frame\r\n")
+            self.send_header("Content-Type", "image/jpeg")
+            self.send_header("Content-Length", len(frame))
+            self.end_headers()
+            self.wfile.write(frame)
+            time.sleep(0.1)  # Adjust frame rate here
 
 
 def configDNN():
@@ -12,7 +41,6 @@ def configDNN():
     with open(classFile, "rt") as f:
         classNames = f.read().rstrip("\n").split("\n")
 
-    # This is to pull the information about what each object should look like
     configPath = "./Object_Detection_Files/ssd_mobilenet_v3_large_coco_2020_01_14.pbtxt"
     weightsPath = "./Object_Detection_Files/frozen_inference_graph.pb"
 
@@ -25,9 +53,6 @@ def configDNN():
     return (dnn, classNames)
 
 
-# thres = confidence threshold before an object is detected
-# nms = Non-Maximum Suppression - higher percentage reduces number of overlapping detected boxes
-# cup = list of names of objects to detect or empty for all available objects
 def objectRecognition(dnn, classNames, image, thres, nms, draw=True, objects=[]):
     classIds, confs, bbox = dnn.detect(image, confThreshold=thres, nmsThreshold=nms)
 
@@ -57,26 +82,27 @@ def objectRecognition(dnn, classNames, image, thres, nms, draw=True, objects=[])
     return image, recognisedObjects
 
 
-# Below determines the size of the live feed window that will be displayed on the Raspberry Pi OS
+(dnn, classNames) = configDNN()
+
+picam2 = Picamera2()
+config = picam2.create_preview_configuration({"format": "RGB888"})
+picam2.configure(config)
+picam2.start()
+
+
+def start_server():
+    server_address = ("", 8000)
+    httpd = HTTPServer(server_address, VideoStreamHandler)
+    print("Server started on port 8000")
+    httpd.serve_forever()
+
+
 if __name__ == "__main__":
-
-    (dnn, classNames) = configDNN()
-
-    picam2 = Picamera2()
-    # Set the camera format to RGB instead of the default RGBA
-    config = picam2.create_preview_configuration({"format": "RGB888"})
-    picam2.configure(config)
-    picam2.start()
-    while True:
-        # Copy the camera image into an array
-        pc2array = picam2.capture_array()
-
-        # Rotate the image 180Degrees if the camera is upside down
-        pc2array = np.rot90(pc2array, 2).copy()
-
-        # Do the object recognition
-        result, objectInfo = objectRecognition(dnn, classNames, pc2array, 0.6, 0.6)
-
-        # Show it in a window
-        cv2.imshow("Output", pc2array)
-        cv2.waitKey(50)
+    server_thread = threading.Thread(target=start_server)
+    server_thread.daemon = True
+    server_thread.start()
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        picam2.stop()
