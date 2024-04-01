@@ -56,24 +56,30 @@ class VideoStreamHandler(BaseHTTPRequestHandler):
             image, recognizedArray = objectRecognition(
                 dnn, classNames, pc2array, 0.6, 0.6
             )
-            print(recognizedArray)
+
+            person_detected = False
+            for detected_object in recognizedArray:
+                if detected_object[1] == "person":
+                    person_detected = True
+                    break
+
             # Check if a person is detected
-            # if "person" in result:
-            #     if not recording:
-            #         # Start recording if not already recording
-            #         recording = True
-            #         out, file_name = record_video()
-            #         print(f"Recording started: {file_name}")
+            if person_detected:
+                if not recording:
+                    # Start recording if not already recording
+                    recording = True
+                    out, file_name = record_video()
+                    print(f"Recording started: {file_name}")
 
-            #     # Write the frame to the video
-            #     out.write(result)
-            #     last_detection_time = time.time()
+                # Write the frame to the video
+                out.write(image)
+                last_detection_time = time.time()
 
-            # elif recording and time.time() - last_detection_time > cooldown_time:
-            #     # Stop recording if a person is no longer detected and cooldown time has elapsed
-            #     recording = False
-            #     stop_recording(out)
-            #     print(f"Recording stopped: {file_name}")
+            elif recording and time.time() - last_detection_time > cooldown_time:
+                # Stop recording if a person is no longer detected and cooldown time has elapsed
+                recording = False
+                stop_recording(out)
+                print(f"Recording stopped: {file_name}")
 
             ret, buffer = cv2.imencode(".jpg", image)
             frame = buffer.tobytes()
