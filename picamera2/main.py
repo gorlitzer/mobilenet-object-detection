@@ -52,35 +52,6 @@ def configDNN():
     return (dnn, classNames)
 
 
-def objectRecognition(dnn, classNames, image, thres, nms, draw=True, objects=[]):
-    classIds, confs, bbox = dnn.detect(image, confThreshold=thres, nmsThreshold=nms)
-
-    if len(objects) == 0:
-        objects = classNames
-    recognisedObjects = []
-    if len(classIds) != 0:
-        for classId, confidence, box in zip(classIds.flatten(), confs.flatten(), bbox):
-            className = classNames[classId - 1]
-            if className in objects:
-                recognisedObjects.append([box, className])
-                if draw:
-                    cv2.rectangle(image, box, color=(0, 0, 255), thickness=1)
-                    cv2.putText(
-                        image,
-                        classNames[classId - 1]
-                        + " ("
-                        + str(round(confidence * 100, 2))
-                        + ")",
-                        (box[0] - 10, box[1] - 10),
-                        cv2.FONT_HERSHEY_SIMPLEX,
-                        0.5,
-                        (0, 0, 255),
-                        2,
-                    )
-
-    return image, recognisedObjects
-
-
 (dnn, classNames) = configDNN()
 
 picam2 = Picamera2()

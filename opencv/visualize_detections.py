@@ -2,24 +2,6 @@ import numpy as np
 import cv2
 
 
-def log_detection(detections, classNames):
-    for i in range(detections.shape[2]):
-        # Confidence of prediction
-        confidence = detections[0, 0, i, 2]
-
-        # Set confidence level threshold to filter weak predictions
-        if confidence > 0.75:
-            # Get class id
-            class_id = int(detections[0, 0, i, 1])
-
-            # Create label
-            label_val = "%.3f" % (confidence)  # Round off to 3 decimal places
-            label = classNames[class_id] + ": " + str(label_val)
-
-            # Log to terminal
-            print("Detected:", label)
-
-
 def visualize_detection(frame, detections, classNames, color_map):
     for i in range(detections.shape[2]):
         # Confidence of prediction
