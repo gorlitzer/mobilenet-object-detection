@@ -54,24 +54,24 @@ class VideoStreamHandler(BaseHTTPRequestHandler):
         while True:
             pc2array = picam2.capture_array()
             result, _ = objectRecognition(dnn, classNames, pc2array, 0.6, 0.6)
-
+            print(result)
             # Check if a person is detected
-            if "person" in result:
-                if not recording:
-                    # Start recording if not already recording
-                    recording = True
-                    out, file_name = record_video()
-                    print(f"Recording started: {file_name}")
+            # if "person" in result:
+            #     if not recording:
+            #         # Start recording if not already recording
+            #         recording = True
+            #         out, file_name = record_video()
+            #         print(f"Recording started: {file_name}")
 
-                # Write the frame to the video
-                out.write(result)
-                last_detection_time = time.time()
+            #     # Write the frame to the video
+            #     out.write(result)
+            #     last_detection_time = time.time()
 
-            elif recording and time.time() - last_detection_time > cooldown_time:
-                # Stop recording if a person is no longer detected and cooldown time has elapsed
-                recording = False
-                stop_recording(out)
-                print(f"Recording stopped: {file_name}")
+            # elif recording and time.time() - last_detection_time > cooldown_time:
+            #     # Stop recording if a person is no longer detected and cooldown time has elapsed
+            #     recording = False
+            #     stop_recording(out)
+            #     print(f"Recording stopped: {file_name}")
 
             ret, buffer = cv2.imencode(".jpg", result)
             frame = buffer.tobytes()
