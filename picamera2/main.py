@@ -53,10 +53,10 @@ class VideoStreamHandler(BaseHTTPRequestHandler):
 
         while True:
             pc2array = picam2.capture_array()
-            images, recognized_objs = objectRecognition(
+            image, recognized_objs = objectRecognition(
                 dnn, classNames, pc2array, 0.6, 0.6
             )
-            print(images, recognized_objs)
+            print(image, recognized_objs)
             # Check if a person is detected
             # if "person" in result:
             #     if not recording:
