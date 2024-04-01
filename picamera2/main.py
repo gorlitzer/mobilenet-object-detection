@@ -57,9 +57,7 @@ def configDNN():
 (dnn, classNames) = configDNN()
 
 picam2 = Picamera2()
-config = picam2.configure(
-    picam2.create_video_configuration(main={"size": (1920, 1080), "format": "RGB888"})
-)
+config = picam2.create_preview_configuration({"format": "RGB888"})
 picam2.configure(config)
 picam2.start()
 
