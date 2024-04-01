@@ -14,16 +14,16 @@ from visualize_detections import objectRecognition
 
 def record_video():
     # Create a folder with the current date if it doesn't exist
-    folder_name = datetime.now().strftime("%Y-%m-%d")
+    folder_name = os.path.join("media", datetime.now().strftime("%Y-%m-%d"))
     if not os.path.exists(folder_name):
         os.makedirs(folder_name)
 
     # Generate a file name with timestamp
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    file_name = os.path.join(folder_name, f"video_{timestamp}.avi")
+    file_name = os.path.join(folder_name, f"video_{timestamp}.mp4")
 
     # Start recording
-    out = cv2.VideoWriter(file_name, cv2.VideoWriter_fourcc(*"XVID"), 20.0, (640, 480))
+    out = cv2.VideoWriter(file_name, cv2.VideoWriter_fourcc(*"mp4v"), 20.0, (640, 480))
 
     return out, file_name
 
