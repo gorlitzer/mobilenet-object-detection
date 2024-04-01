@@ -2,7 +2,8 @@
 
 OpenCV works only with USB cameras. So for pi we need to use picamera2 module and code is slightly different.
 
-We will have then 2 folders that will have custom `main` code. We also use 2 different models
+Had to develop 2 solutions then, in order to test locally and on pi hardware eventually.
+Thus, for the time being we have then 2 folders that have custom `main` code. We also refer to the Caffe MobileNetV3 model and the SSD MobileNetV3 model as two variations or different versions of the MobileNetV3 model architecture. More on this below.
 
 ## Run the program with OPENCV (so on your laptop)
 
@@ -32,6 +33,19 @@ Break with `ESC` or by killing terminal process `CTRL + C` (linux and mac, dunno
 Mobilenet is a type of convolutional neural network designed for mobile and embedded vision applications. Instead of using standard convolution layers, they are based on a streamlined architecture that uses depthwise separable convolutions. Using this architecture, we can build lightweight deep neural networks that have low latency for mobile and embedded devices (example: jetson nano).
 
 Read more about the network architecture in the [original paper by Google](https://arxiv.org/abs/1704.04861v1) researchers in 2017.
+
+- **Caffe MobileNetV3 Model:** This refers to a specific implementation or version of the MobileNetV3 architecture trained using the Caffe deep learning framework. Caffe is a deep learning framework developed by Berkeley AI Research (BAIR) and is known for its efficiency in training and deploying deep neural networks. The MobileNetV3 model implemented in Caffe is likely trained for specific tasks such as image classification or feature extraction.
+
+- **SSD MobileNetV3 Large COCO Model:** This model, on the other hand, is an implementation of the MobileNetV3 architecture trained specifically for object detection tasks using the Single Shot Multibox Detector (SSD) framework. It is trained on the COCO (Common Objects in Context) dataset, which contains various object categories along with bounding box annotations.
+
+The main difference between these two variations lies in their architecture and the specific tasks they are designed for:
+
+The `Caffe MobileNetV3` model is likely optimized for image classification tasks, where the goal is to classify an input image into one of several predefined categories.
+The `SSD MobileNetV3` model, being trained for object detection, is capable of not only classifying objects in an image but also localizing them by providing bounding box coordinates.
+
+In summary, while both variations are based on the `MobileNetV3` architecture, they are trained for different tasks and may have differences in their network architecture, training data, and performance characteristics.
+
+Nevertheless, we use them to accomplish same task ;)
 
 ## Install Requirements
 
