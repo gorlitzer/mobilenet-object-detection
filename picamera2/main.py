@@ -101,19 +101,19 @@ def configDNN():
     return (dnn, classNames)
 
 
+def start_server():
+    server_address = ("", 8000)
+    httpd = HTTPServer(server_address, VideoStreamHandler)
+    print("Server started on port 8000")
+    httpd.serve_forever()
+
+
 (dnn, classNames) = configDNN()
 
 picam2 = Picamera2()
 config = picam2.create_preview_configuration({"format": "RGB888", "size": (1920, 1080)})
 picam2.configure(config)
 picam2.start()
-
-
-def start_server():
-    server_address = ("", 8000)
-    httpd = HTTPServer(server_address, VideoStreamHandler)
-    print("Server started on port 8000")
-    httpd.serve_forever()
 
 
 if __name__ == "__main__":
