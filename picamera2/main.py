@@ -57,7 +57,9 @@ def configDNN():
 (dnn, classNames) = configDNN()
 
 picam2 = Picamera2()
-config = picam2.create_preview_configuration({"format": "RGB888"})
+config = picam2.create_preview_configuration(
+    raw={"format": "RGB888", "size": (1920, 1080)}
+)
 picam2.configure(config)
 picam2.start()
 
