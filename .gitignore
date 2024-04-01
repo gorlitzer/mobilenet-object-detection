@@ -1,2 +1,5 @@
-/models/MobileNetSSD/*
-/__pycache__/*
+*/__pycache__/
+/venv-mobilenet
+*/Object_Detection_Files/*
+*/models/MobileNetSSD/*
+
