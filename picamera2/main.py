@@ -53,8 +53,10 @@ class VideoStreamHandler(BaseHTTPRequestHandler):
 
         while True:
             pc2array = picam2.capture_array()
-            result, _ = objectRecognition(dnn, classNames, pc2array, 0.6, 0.6)
-            print(result)
+            images, recognized_objs = objectRecognition(
+                dnn, classNames, pc2array, 0.6, 0.6
+            )
+            print(images, recognized_objs)
             # Check if a person is detected
             # if "person" in result:
             #     if not recording:
@@ -73,7 +75,7 @@ class VideoStreamHandler(BaseHTTPRequestHandler):
             #     stop_recording(out)
             #     print(f"Recording stopped: {file_name}")
 
-            ret, buffer = cv2.imencode(".jpg", result)
+            ret, buffer = cv2.imencode(".jpg", image)
             frame = buffer.tobytes()
             self.wfile.write(b"--frame\r\n")
             self.send_header("Content-Type", "image/jpeg")
