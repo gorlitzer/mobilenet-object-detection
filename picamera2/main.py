@@ -7,6 +7,8 @@ import threading
 import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
+from visualize_detections import objectRecognition
+
 
 class VideoStreamHandler(BaseHTTPRequestHandler):
     def do_GET(self):
