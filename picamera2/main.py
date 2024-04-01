@@ -23,7 +23,6 @@ class VideoStreamHandler(BaseHTTPRequestHandler):
     def stream(self):
         while True:
             pc2array = picam2.capture_array()
-            pc2array = np.rot90(pc2array, 2).copy()
             result, _ = objectRecognition(dnn, classNames, pc2array, 0.6, 0.6)
             ret, buffer = cv2.imencode(".jpg", result)
             frame = buffer.tobytes()

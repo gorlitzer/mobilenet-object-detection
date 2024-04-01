@@ -14,7 +14,7 @@ pip install opencv-python
 cd opencv && python3 main.py # First run might fail due to missing camera permission
 ```
 
-## Run the program with PICAMERA2 (so on your raspi)
+## Run the program with PICAMERA2 (so on your headless raspi)
 
 ```bash
 chmod +x ./picamera2/setup.sh && ./picamera2/setup.sh
