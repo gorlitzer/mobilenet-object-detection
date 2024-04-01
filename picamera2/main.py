@@ -8,13 +8,13 @@ import numpy as np
 
 def configDNN():
     classNames = []
-    classFile = "Object_Detection_Files/coco.names"
+    classFile = "./Object_Detection_Files/coco.names"
     with open(classFile, "rt") as f:
         classNames = f.read().rstrip("\n").split("\n")
 
     # This is to pull the information about what each object should look like
-    configPath = "Object_Detection_Files/ssd_mobilenet_v3_large_coco_2020_01_14.pbtxt"
-    weightsPath = "Object_Detection_Files/frozen_inference_graph.pb"
+    configPath = "./Object_Detection_Files/ssd_mobilenet_v3_large_coco_2020_01_14.pbtxt"
+    weightsPath = "./Object_Detection_Files/frozen_inference_graph.pb"
 
     dnn = cv2.dnn_DetectionModel(weightsPath, configPath)
     dnn.setInputSize(320, 320)
