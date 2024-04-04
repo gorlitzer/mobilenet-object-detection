@@ -1,4 +1,4 @@
-# Object Detection using mobilenet SSD
+# Object Detection using mobilenet SSD (WIP)
 
 OpenCV works only with USB cameras. So for pi we need to use picamera2 module and code is slightly different.
 
