@@ -11,6 +11,23 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 
 from visualize_detections import objectRecognition
 
+import telegram
+
+
+def send_video(file_name):
+    # Replace with your Telegram bot token
+    bot_token = "XXXX:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+
+    # Replace with the chat ID of the recipient
+    chat_id = "XXXXXXXXX"
+
+    # Create a Telegram Bot instance
+    bot = telegram.Bot(token=bot_token)
+
+    # Send the video file
+    with open(file_name, "rb") as file:
+        bot.send_video(chat_id=chat_id, video=file)
+
 
 def record_video():
     # Create a folder with the current date if it doesn't exist
@@ -20,10 +37,10 @@ def record_video():
 
     # Generate a file name with timestamp
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    file_name = os.path.join(folder_name, f"video_{timestamp}.mp4")
+    file_name = os.path.join(folder_name, f"video_{timestamp}.avi")
 
     # Start recording
-    out = cv2.VideoWriter(file_name, cv2.VideoWriter_fourcc(*"mp4v"), 20.0, (640, 480))
+    out = cv2.VideoWriter(file_name, cv2.VideoWriter_fourcc(*"MJPG"), 20.0, (640, 480))
 
     return out, file_name
 
@@ -47,9 +64,11 @@ class VideoStreamHandler(BaseHTTPRequestHandler):
 
     def stream(self):
         recording = False
+        record_video = False  # New boolean variable
         out = None
         cooldown_time = 5  # Recording cooldown time (seconds)
         last_detection_time = time.time()
+        recording_start_time = 0  # New variable to track recording start time
 
         while True:
             pc2array = picam2.capture_array()
@@ -70,16 +89,30 @@ class VideoStreamHandler(BaseHTTPRequestHandler):
                     recording = True
                     out, file_name = record_video()
                     print(f"Recording started: {file_name}")
-
-                # Write the frame to the video
-                out.write(image)
-                last_detection_time = time.time()
+                    recording_start_time = time.time()
+                    record_video = True  # Set record_video to True
 
             elif recording and time.time() - last_detection_time > cooldown_time:
                 # Stop recording if a person is no longer detected and cooldown time has elapsed
                 recording = False
                 stop_recording(out)
                 print(f"Recording stopped: {file_name}")
+
+            # New code to limit recording time and send video over Telegram
+            if (
+                record_video and time.time() - recording_start_time > 5
+            ):  # Limit recording to 5 seconds
+                recording = False
+                stop_recording(out)
+                print(f"Recording stopped: {file_name}")
+
+                # Send video over Telegram
+                send_video(file_name)
+
+                # Delete video file
+                os.remove(file_name)
+
+                record_video = False
 
             ret, buffer = cv2.imencode(".jpg", image)
             frame = buffer.tobytes()
