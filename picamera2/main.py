@@ -12,6 +12,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from visualize_detections import objectRecognition
 
 import telegram
+import asyncio
 
 
 def send_screenshot(file_name):
@@ -51,14 +52,14 @@ def take_screenshot():
 
 
 class VideoStreamHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
+    async def do_GET(self):
         if self.path == "/":
             self.send_response(200)
             self.send_header(
                 "Content-type", "multipart/x-mixed-replace; boundary=--frame"
             )
             self.end_headers()
-            self.stream()
+            await self.stream()
         else:
             self.send_error(404)
 
