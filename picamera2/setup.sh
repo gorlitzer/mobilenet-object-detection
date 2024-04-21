@@ -4,7 +4,7 @@
 url="https://core-electronics.com.au/media/kbase/491/Object_Detection_Files.zip"
 
 # Define the directory where you want to extract the contents
-directory="./picamera2"
+directory="./Object_Detection_Files"
 
 # Create the directory if it doesn't exist
 mkdir -p "$directory"
