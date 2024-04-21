@@ -14,7 +14,7 @@ from visualize_detections import objectRecognition
 import telegram
 
 
-def send_video(file_name):
+def send_screenshot(file_name):
     # Replace with your Telegram bot token
     bot_token = "XXXX:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 
@@ -24,12 +24,12 @@ def send_video(file_name):
     # Create a Telegram Bot instance
     bot = telegram.Bot(token=bot_token)
 
-    # Send the video file
+    # Send the screenshot file
     with open(file_name, "rb") as file:
-        bot.send_video(chat_id=chat_id, video=file)
+        bot.send_photo(chat_id=chat_id, photo=file)
 
 
-def record_video():
+def take_screenshot():
     try:
         # Create a folder with the current date if it doesn't exist
         folder_name = os.path.join("media", datetime.now().strftime("%Y-%m-%d"))
@@ -38,22 +38,16 @@ def record_video():
 
         # Generate a file name with timestamp
         timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        file_name = os.path.join(folder_name, f"video_{timestamp}.avi")
+        file_name = os.path.join(folder_name, f"screenshot_{timestamp}.jpg")
 
-        # Start recording
-        out = cv2.VideoWriter(
-            file_name, cv2.VideoWriter_fourcc(*"MJPG"), 20.0, (640, 480)
-        )
+        # Take a screenshot
+        pc2array = picam2.capture_array()
+        cv2.imwrite(file_name, pc2array)
 
-        return out, file_name
+        return file_name
     except Exception as e:
-        print(f"Error recording video: {str(e)}")
-        return False, ""
-
-
-def stop_recording(out):
-    # Release the video writer
-    out.release()
+        print(f"Error taking screenshot: {str(e)}")
+        return ""
 
 
 class VideoStreamHandler(BaseHTTPRequestHandler):
@@ -68,14 +62,7 @@ class VideoStreamHandler(BaseHTTPRequestHandler):
         else:
             self.send_error(404)
 
-    def stream(self):
-        recording = False
-        record_video = False  # New boolean variable
-        out = None
-        cooldown_time = 5  # Recording cooldown time (seconds)
-        last_detection_time = time.time()
-        recording_start_time = 0  # New variable to track recording start time
-
+    async def stream(self):
         while True:
             pc2array = picam2.capture_array()
             image, recognizedArray = objectRecognition(
@@ -88,37 +75,11 @@ class VideoStreamHandler(BaseHTTPRequestHandler):
                     person_detected = True
                     break
 
-            # Check if a person is detected
+            # Take a screenshot and send it over Telegram when a person is detected
             if person_detected:
-                if not recording:
-                    # Start recording if not already recording
-                    recording = True
-                    out, file_name = record_video()
-                    print(f"Recording started: {file_name}")
-                    recording_start_time = time.time()
-                    record_video = True  # Set record_video to True
-
-            elif recording and time.time() - last_detection_time > cooldown_time:
-                # Stop recording if a person is no longer detected and cooldown time has elapsed
-                recording = False
-                stop_recording(out)
-                print(f"Recording stopped: {file_name}")
-
-            # New code to limit recording time and send video over Telegram
-            if (
-                record_video and time.time() - recording_start_time > 5
-            ):  # Limit recording to 5 seconds
-                recording = False
-                stop_recording(out)
-                print(f"Recording stopped: {file_name}")
-
-                # Send video over Telegram
-                send_video(file_name)
-
-                # Delete video file
-                os.remove(file_name)
-
-                record_video = False
+                file_name = take_screenshot()
+                if file_name:
+                    await send_screenshot(file_name)
 
             ret, buffer = cv2.imencode(".jpg", image)
             frame = buffer.tobytes()
@@ -127,7 +88,7 @@ class VideoStreamHandler(BaseHTTPRequestHandler):
             self.send_header("Content-Length", len(frame))
             self.end_headers()
             self.wfile.write(frame)
-            time.sleep(0.1)  # Adjust frame rate here
+            await asyncio.sleep(0.1)  # Adjust frame rate here
 
 
 def configDNN():
