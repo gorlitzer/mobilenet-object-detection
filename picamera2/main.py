@@ -30,19 +30,25 @@ def send_video(file_name):
 
 
 def record_video():
-    # Create a folder with the current date if it doesn't exist
-    folder_name = os.path.join("media", datetime.now().strftime("%Y-%m-%d"))
-    if not os.path.exists(folder_name):
-        os.makedirs(folder_name)
+    try:
+        # Create a folder with the current date if it doesn't exist
+        folder_name = os.path.join("media", datetime.now().strftime("%Y-%m-%d"))
+        if not os.path.exists(folder_name):
+            os.makedirs(folder_name)
 
-    # Generate a file name with timestamp
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    file_name = os.path.join(folder_name, f"video_{timestamp}.avi")
+        # Generate a file name with timestamp
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        file_name = os.path.join(folder_name, f"video_{timestamp}.avi")
 
-    # Start recording
-    out = cv2.VideoWriter(file_name, cv2.VideoWriter_fourcc(*"MJPG"), 20.0, (640, 480))
+        # Start recording
+        out = cv2.VideoWriter(
+            file_name, cv2.VideoWriter_fourcc(*"MJPG"), 20.0, (640, 480)
+        )
 
-    return out, file_name
+        return out, file_name
+    except Exception as e:
+        print(f"Error recording video: {str(e)}")
+        return False, ""
 
 
 def stop_recording(out):
