@@ -20,7 +20,7 @@ NOTIFICATION_COOLDOWN=60
 chmod +x ./opencv/setup.sh && ./opencv/setup.sh
 python3 -m venv venv-mobilenet
 source venv-mobilenet/bin/activate
-pip install opencv-python
+pip install -r requirements.txt
 cd opencv && python3 main.py # First run might fail due to missing camera permission
 ```
 
@@ -31,6 +31,7 @@ sudo apt install -y python3-picamera2
 sudo apt install -y python3-opencv
 python3 -m venv --system-site-packages venv-mobilenet
 source venv-mobilenet/bin/activate
+pip install -r requirements.txt
 cd picamera2 
 chmod +x ./setup.sh && ./setup.sh
 python3 main.py # First run might fail due to missing camera permission
