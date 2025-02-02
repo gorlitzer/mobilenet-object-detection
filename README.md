@@ -5,6 +5,15 @@ OpenCV works only with USB cameras. So for pi we need to use picamera2 module an
 Had to develop 2 solutions then, in order to test locally and on pi hardware eventually.
 Thus, for the time being we have then 2 folders that have custom `main` code. We also refer to the Caffe MobileNetV3 model and the SSD MobileNetV3 model as two variations or different versions of the MobileNetV3 model architecture. More on this below.
 
+## Set enviroment variables
+
+```bash
+TELEGRAM_ENABLED=true
+TELEGRAM_BOT_TOKEN=7794819465:AAHQmG6TdrWdRMYrIMSOCcEwiOZtdhlSuaA
+TELEGRAM_CHAT_ID=-4661983422
+NOTIFICATION_COOLDOWN=60
+```
+
 ## Run the program with OPENCV (so on your laptop)
 
 ```bash

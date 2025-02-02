@@ -9,7 +9,6 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 
 from visualize_detections import objectRecognition
 
-
 class VideoStreamHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path == "/":
@@ -26,6 +25,12 @@ class VideoStreamHandler(BaseHTTPRequestHandler):
         while True:
             pc2array = picam2.capture_array()
             result, _ = objectRecognition(dnn, classNames, pc2array, 0.6, 0.6)
+
+            if any(obj["class"] == "person" for obj in detected_objects):
+                telegram_notifier.notify_detection(
+                    frame_source=lambda: picam2.capture_array()
+                )
+
             ret, buffer = cv2.imencode(".jpg", result)
             frame = buffer.tobytes()
             self.wfile.write(b"--frame\r\n")

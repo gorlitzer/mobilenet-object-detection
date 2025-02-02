@@ -9,34 +9,66 @@ def objectRecognition(dnn, classNames, image, thres, nms, draw=True, objects=[])
     class_colors = {
         "person": (0, 255, 0),  # Green color for person
         "car": (255, 0, 0),  # Blue color for car
-        "dog": (0, 0, 255),  # Red color for dog (example, you can add more)
-        # Add more class labels and their corresponding colors as needed
+        "dog": (0, 0, 255),  # Red color for dog
+        "cat": (255, 255, 0),  # Cyan for cat
+        "bird": (255, 0, 255),  # Magenta for bird
     }
 
     if len(objects) == 0:
         objects = classNames
-    recognisedObjects = []
+        
+    detected_objects = []
+    
     if len(classIds) != 0:
         for classId, confidence, box in zip(classIds.flatten(), confs.flatten(), bbox):
             className = classNames[classId - 1]
             if className in objects:
-                recognisedObjects.append([box, className])
+                # Store detection info in consistent format
+                detected_objects.append({
+                    "class": className,
+                    "confidence": confidence,
+                    "bbox": {
+                        "x1": int(box[0]),
+                        "y1": int(box[1]),
+                        "x2": int(box[0] + box[2]),
+                        "y2": int(box[1] + box[3])
+                    }
+                })
+                
                 if draw:
-                    color = class_colors.get(
-                        className, (0, 0, 255)
-                    )  # Default color: red
-                    cv2.rectangle(image, box, color=color, thickness=1)
+                    color = class_colors.get(className, (0, 0, 255))  # Default: red
+                    
+                    # Draw bounding box
+                    cv2.rectangle(
+                        image,
+                        (int(box[0]), int(box[1])),
+                        (int(box[0] + box[2]), int(box[1] + box[3])),
+                        color,
+                        thickness=2
+                    )
+                    
+                    # Create and draw label
+                    label = f"{className} ({confidence * 100:.2f}%)"
+                    (w, h), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 2)
+                    
+                    # Draw label background
+                    cv2.rectangle(
+                        image,
+                        (int(box[0]), int(box[1] - h - 5)),
+                        (int(box[0] + w), int(box[1])),
+                        color,
+                        cv2.FILLED
+                    )
+                    
+                    # Draw label text
                     cv2.putText(
                         image,
-                        classNames[classId - 1]
-                        + " ("
-                        + str(round(confidence * 100, 2))
-                        + ")",
-                        (box[0] - 10, box[1] - 10),
+                        label,
+                        (int(box[0]), int(box[1] - 5)),
                         cv2.FONT_HERSHEY_SIMPLEX,
                         0.5,
-                        color,
-                        2,
+                        (255, 255, 255),
+                        2
                     )
 
-    return image, recognisedObjects
+    return image, detected_objects

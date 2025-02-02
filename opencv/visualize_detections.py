@@ -3,28 +3,34 @@ import cv2
 
 
 def visualize_detection(frame, detections, classNames, color_map):
+    detected_objects = []
+    
     for i in range(detections.shape[2]):
-        # Confidence of prediction
         confidence = detections[0, 0, i, 2]
-
-        # Set confidence level threshold to filter weak predictions
+        
         if confidence > 0.75:
-            # Get class id
             class_id = int(detections[0, 0, i, 1])
-
-            # Scale to the frame
-            width = frame.shape[1]
-            height = frame.shape[0]
-            x_top_left = int(detections[0, 0, i, 3] * width)
-            y_top_left = int(detections[0, 0, i, 4] * height)
-            x_bottom_right = int(detections[0, 0, i, 5] * width)
-            y_bottom_right = int(detections[0, 0, i, 6] * height)
-
-            # Draw bounding box around the detected object with the corresponding color
-            color = color_map.get(
-                classNames[class_id], (0, 0, 0)
-            )  # Default to black if class color not found
-
+            
+            # Store detection info
+            detected_objects.append({
+                "class": classNames[class_id],
+                "confidence": confidence,
+                "bbox": {
+                    "x1": int(detections[0, 0, i, 3] * frame.shape[1]),
+                    "y1": int(detections[0, 0, i, 4] * frame.shape[0]),
+                    "x2": int(detections[0, 0, i, 5] * frame.shape[1]),
+                    "y2": int(detections[0, 0, i, 6] * frame.shape[0])
+                }
+            })
+            
+            # Draw bounding box
+            x_top_left = int(detections[0, 0, i, 3] * frame.shape[1])
+            y_top_left = int(detections[0, 0, i, 4] * frame.shape[0])
+            x_bottom_right = int(detections[0, 0, i, 5] * frame.shape[1])
+            y_bottom_right = int(detections[0, 0, i, 6] * frame.shape[0])
+            
+            color = color_map.get(classNames[class_id], (0, 0, 0))
+            
             cv2.rectangle(
                 frame,
                 (x_top_left, y_top_left),
@@ -32,15 +38,12 @@ def visualize_detection(frame, detections, classNames, color_map):
                 color,
                 thickness=2,
             )
-
-            # Create label
-            label_val = "%.3f" % (confidence)  # Round off to 3 decimal places
+            
+            # Create and draw label
+            label_val = "%.3f" % confidence
             label = classNames[class_id] + ": " + str(label_val)
-
-            # Get width and height of the label string
             (w, h), t = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 1, 2)
-
-            # Draw bounding box around the text
+            
             cv2.rectangle(
                 frame,
                 (x_top_left, y_top_left - h),
@@ -48,8 +51,7 @@ def visualize_detection(frame, detections, classNames, color_map):
                 color,
                 cv2.FILLED,
             )
-
-            # Draw label text
+            
             cv2.putText(
                 frame,
                 label,
@@ -59,3 +61,5 @@ def visualize_detection(frame, detections, classNames, color_map):
                 (255, 255, 255),
                 thickness=2,
             )
+    
+    return detected_objects

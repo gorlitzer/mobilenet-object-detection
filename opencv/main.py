@@ -3,6 +3,9 @@ import numpy as np
 import cv2
 
 from visualize_detections import visualize_detection
+from telegram_notifier import TelegramNotifier
+
+telegram_notifier = TelegramNotifier()
 
 # 1. Initial requirements
 
@@ -99,7 +102,13 @@ while True:
     detections = net.forward()
 
     # Visualize detections
-    visualize_detection(frame, detections, classNames, color_map)
+    detected_objects = visualize_detection(frame, detections, classNames, color_map)
+
+    # Check for person detection
+    if any(obj["class"] == "person" for obj in detected_objects):
+        telegram_notifier.notify_detection(
+            frame_source=lambda: cap.read()[1]
+        )
 
     cv2.namedWindow("frame", cv2.WINDOW_NORMAL)
     cv2.imshow("frame", frame)
