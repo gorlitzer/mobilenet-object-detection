@@ -8,6 +8,9 @@ import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 from visualize_detections import objectRecognition
+from telegram_notifier import TelegramNotifier
+
+telegram_notifier = TelegramNotifier()
 
 class VideoStreamHandler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -24,7 +27,7 @@ class VideoStreamHandler(BaseHTTPRequestHandler):
     def stream(self):
         while True:
             pc2array = picam2.capture_array()
-            result, _ = objectRecognition(dnn, classNames, pc2array, 0.6, 0.6)
+            result, detected_objects = objectRecognition(dnn, classNames, pc2array, 0.6, 0.6)
 
             if any(obj["class"] == "person" for obj in detected_objects):
                 telegram_notifier.notify_detection(

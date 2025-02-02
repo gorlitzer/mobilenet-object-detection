@@ -1,15 +1,15 @@
 #!/bin/bash
 
-# Define the URL to download the zip file
-url="https://core-electronics.com.au/media/kbase/491/Object_Detection_Files.zip"
+# Create models directory if it doesn't exist
+mkdir -p Object_Detection_Files
 
+# Download the Object Detection Files
+wget https://core-electronics.com.au/media/kbase/491/Object_Detection_Files.zip
 
-# Download the zip file
-wget -O "Object_Detection_Files.zip" "$url"
+# Unzip the files
+unzip Object_Detection_Files.zip -d Object_Detection_Files/
 
-# Extract the contents of the zip file into the specified directory
-unzip "Object_Detection_Files.zip" -d "$directory"
+# Clean up
+rm Object_Detection_Files.zip
 
-# Remove the zip file after extraction
-rm "Object_Detection_Files.zip"
-
+echo "Setup completed successfully!"
