@@ -152,9 +152,14 @@ class RoadSignDetector:
             try:
                 from picamera2 import Picamera2
                 import time
+                logger.info("Successfully imported picamera2 module")
             except ImportError:
                 logger.error("Picamera2 module not found. Please install it on your Raspberry Pi.")
-                logger.error("Run: sudo apt install -y python3-picamera2")
+                logger.error("Run the install_picamera2.sh script in the project directory:")
+                logger.error("chmod +x install_picamera2.sh")
+                logger.error("./install_picamera2.sh")
+                logger.error("Or manually install with: sudo apt install -y python3-picamera2")
+                logger.error("After installation, you may need to reboot your Raspberry Pi.")
                 raise
             
             # Initialize picamera2

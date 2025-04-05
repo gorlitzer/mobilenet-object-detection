@@ -85,13 +85,7 @@ chmod +x setup.sh
 
 ## Usage
 
-1. Set up environment variables (optional, for Telegram notifications):
-```bash
-cp .env.example .env
-# Edit .env with your Telegram bot token and chat ID
-```
-
-2. Run the detection:
+1. Run the detection:
 
 ### On Raspberry Pi (using picamera2)
 ```bash
