@@ -9,17 +9,21 @@ if [ -f /proc/device-tree/model ]; then
     if [[ $PI_MODEL == *"Raspberry Pi"* ]]; then
         echo "Raspberry Pi detected: $PI_MODEL"
         
+        # Install system dependencies
+        echo "Installing system dependencies..."
+        sudo apt update
+        sudo apt install -y python3-picamera2 python3-opencv libcap-dev python3-libcamera python3-kms++
+        
         # Check if picamera2 is installed
         if ! command -v python3-picamera2 &> /dev/null; then
             echo "Installing picamera2..."
-            sudo apt update
-            sudo apt install -y python3-picamera2 python3-opencv
+            sudo apt install -y python3-picamera2
         else
             echo "picamera2 is already installed"
         fi
         
         # Check if camera is enabled
-        if ! vcgencmd get_camera | grep -q "supported=1"; then
+        if ! vcgencmd get_camera 2>/dev/null | grep -q "supported=1"; then
             echo "WARNING: Camera may not be enabled. Please run 'sudo raspi-config' and enable the camera."
         fi
     fi
