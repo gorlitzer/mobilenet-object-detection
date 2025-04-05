@@ -21,16 +21,9 @@ ROAD_SIGN_CLASSES = [
 USE_PICAMERA = True  # Set to True for Raspberry Pi with picamera2
 CAMERA_CONFIG = {
     'main': {
-        'size': (640, 480),
         'format': 'RGB888',
-        'buffer_count': 1,
-    },
-    'lores': {
-        'size': (320, 240),
-        'format': 'YUV420',
-    },
-    'display': 'lores',
-    'encode': 'main',
+        'size': (640, 480)
+    }
 }
 
 # Video configuration (for non-picamera sources)

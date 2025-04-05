@@ -174,12 +174,7 @@ class RoadSignDetector:
             
             # Configure camera
             try:
-                config = picam2.create_preview_configuration(
-                    main=CAMERA_CONFIG['main'],
-                    lores=CAMERA_CONFIG['lores'],
-                    display=CAMERA_CONFIG['display'],
-                    encode=CAMERA_CONFIG['encode']
-                )
+                config = picam2.create_preview_configuration(main=CAMERA_CONFIG['main'])
                 picam2.configure(config)
                 logger.info("Picamera2 configured successfully")
             except Exception as e:
