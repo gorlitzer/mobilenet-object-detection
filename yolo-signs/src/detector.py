@@ -4,6 +4,8 @@ from ultralytics import YOLO
 import time
 from typing import Tuple, List, Dict, Optional
 import logging
+import os
+import platform
 
 from config import (
     MODEL_PATH,
@@ -113,37 +115,90 @@ class RoadSignDetector:
         Args:
             source: Camera index (int) or video file path (str)
         """
-        if USE_PICAMERA:
+        # Check if we're on a Raspberry Pi
+        is_raspberry_pi = self._is_raspberry_pi()
+        
+        # Determine if we should use picamera2
+        use_picamera = USE_PICAMERA and is_raspberry_pi
+        
+        if use_picamera:
+            logger.info("Using picamera2 for Raspberry Pi camera")
             self._process_picamera_stream()
         else:
+            logger.info("Using OpenCV for video capture")
             self._process_opencv_stream(source)
+    
+    def _is_raspberry_pi(self) -> bool:
+        """Check if the current system is a Raspberry Pi."""
+        # Check for Raspberry Pi hardware
+        if os.path.exists('/proc/device-tree/model'):
+            with open('/proc/device-tree/model', 'r') as f:
+                model = f.read().strip('\0')
+                if 'Raspberry Pi' in model:
+                    return True
+        
+        # Check platform
+        if platform.system() == 'Linux':
+            # Additional check for Raspberry Pi OS
+            if os.path.exists('/etc/rpi-issue'):
+                return True
+        
+        return False
             
     def _process_picamera_stream(self) -> None:
         """Process video stream from Raspberry Pi camera using picamera2."""
         try:
-            from picamera2 import Picamera2
-            import time
+            # Try to import picamera2
+            try:
+                from picamera2 import Picamera2
+                import time
+            except ImportError:
+                logger.error("Picamera2 module not found. Please install it on your Raspberry Pi.")
+                logger.error("Run: sudo apt install -y python3-picamera2")
+                raise
             
             # Initialize picamera2
-            picam2 = Picamera2()
+            try:
+                picam2 = Picamera2()
+                logger.info("Picamera2 initialized successfully")
+            except Exception as e:
+                logger.error(f"Failed to initialize picamera2: {e}")
+                logger.error("Make sure your camera is properly connected and enabled.")
+                logger.error("Run: sudo raspi-config and enable the camera in Interface Options.")
+                raise
             
             # Configure camera
-            config = picam2.create_preview_configuration(
-                main=CAMERA_CONFIG['main'],
-                lores=CAMERA_CONFIG['lores'],
-                display=CAMERA_CONFIG['display'],
-                encode=CAMERA_CONFIG['encode']
-            )
-            picam2.configure(config)
+            try:
+                config = picam2.create_preview_configuration(
+                    main=CAMERA_CONFIG['main'],
+                    lores=CAMERA_CONFIG['lores'],
+                    display=CAMERA_CONFIG['display'],
+                    encode=CAMERA_CONFIG['encode']
+                )
+                picam2.configure(config)
+                logger.info("Picamera2 configured successfully")
+            except Exception as e:
+                logger.error(f"Failed to configure picamera2: {e}")
+                picam2.close()
+                raise
             
             # Start camera
-            picam2.start()
-            logger.info("Picamera2 started successfully")
+            try:
+                picam2.start()
+                logger.info("Picamera2 started successfully")
+            except Exception as e:
+                logger.error(f"Failed to start picamera2: {e}")
+                picam2.close()
+                raise
             
             try:
                 while True:
                     # Capture frame
-                    frame = picam2.capture_array()
+                    try:
+                        frame = picam2.capture_array()
+                    except Exception as e:
+                        logger.error(f"Failed to capture frame: {e}")
+                        continue
                     
                     # Convert from RGB to BGR for OpenCV
                     frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
@@ -162,13 +217,10 @@ class RoadSignDetector:
                 picam2.stop()
                 cv2.destroyAllWindows()
                 
-        except ImportError:
-            logger.error("Picamera2 module not found. Please install it on your Raspberry Pi.")
-            logger.error("Run: sudo apt install -y python3-picamera2")
-            raise
         except Exception as e:
             logger.error(f"Error with picamera2: {e}")
-            raise
+            logger.error("Falling back to OpenCV capture")
+            self._process_opencv_stream(0)
             
     def _process_opencv_stream(self, source: int = 0) -> None:
         """Process video stream using OpenCV."""
