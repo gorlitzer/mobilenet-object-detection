@@ -27,6 +27,11 @@ def parse_args():
         action='store_true',
         help='Force using picamera2 (Raspberry Pi camera)'
     )
+    parser.add_argument(
+        '--headless',
+        action='store_true',
+        help='Run in headless mode without displaying frames (useful for servers without display)'
+    )
     return parser.parse_args()
 
 def main():
@@ -42,7 +47,7 @@ def main():
     
     if use_picamera:
         logger.info("Using picamera2 for Raspberry Pi camera")
-        detector.process_video_stream()
+        detector.process_video_stream(headless=args.headless)
     else:
         # Convert source to int if it's a camera index
         try:
@@ -81,16 +86,22 @@ def main():
                 if detections:
                     save_frame(processed_frame, detections[0])
                 
-                # Display frame
-                cv2.imshow('Road Sign Detection', processed_frame)
-                
-                # Break loop on 'q' press
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
+                # Display frame if not in headless mode
+                if not args.headless:
+                    cv2.imshow('Road Sign Detection', processed_frame)
+                    
+                    # Break loop on 'q' press
+                    if cv2.waitKey(1) & 0xFF == ord('q'):
+                        break
+                else:
+                    # In headless mode, just print FPS periodically
+                    if fps_counter.frame_count % 30 == 0:  # Print every 30 frames
+                        logger.info(f"FPS: {fps:.2f}")
                     
         finally:
             cap.release()
-            cv2.destroyAllWindows()
+            if not args.headless:
+                cv2.destroyAllWindows()
             logger.info("Road sign detection stopped")
 
 if __name__ == '__main__':

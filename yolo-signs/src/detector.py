@@ -108,25 +108,18 @@ class RoadSignDetector:
         
         return frame, detections
 
-    def process_video_stream(self, source: int = 0) -> None:
+    def process_video_stream(self, source: int = 0, headless: bool = False) -> None:
         """
-        Process video stream from camera or video file.
+        Process video stream from the given source.
         
         Args:
-            source: Camera index (int) or video file path (str)
+            source: Camera index or video file path
+            headless: If True, run without displaying frames (useful for servers without display)
         """
-        # Check if we're on a Raspberry Pi
-        is_raspberry_pi = self._is_raspberry_pi()
-        
-        # Determine if we should use picamera2
-        use_picamera = USE_PICAMERA and is_raspberry_pi
-        
-        if use_picamera:
-            logger.info("Using picamera2 for Raspberry Pi camera")
-            self._process_picamera_stream()
+        if self._is_raspberry_pi() and USE_PICAMERA:
+            self._process_picamera_stream(headless=headless)
         else:
-            logger.info("Using OpenCV for video capture")
-            self._process_opencv_stream(source)
+            self._process_opencv_stream(source, headless=headless)
     
     def _is_raspberry_pi(self) -> bool:
         """Check if the current system is a Raspberry Pi."""
@@ -145,107 +138,124 @@ class RoadSignDetector:
         
         return False
             
-    def _process_picamera_stream(self) -> None:
-        """Process video stream from Raspberry Pi camera using picamera2."""
+    def _process_picamera_stream(self, headless: bool = False) -> None:
+        """
+        Process video stream from picamera2.
+        
+        Args:
+            headless: If True, run without displaying frames (useful for servers without display)
+        """
         try:
-            # Try to import picamera2
-            try:
-                from picamera2 import Picamera2
-                import time
-                logger.info("Successfully imported picamera2 module")
-            except ImportError:
-                logger.error("Picamera2 module not found. Please install it on your Raspberry Pi.")
-                logger.error("Run the install_picamera2.sh script in the project directory:")
-                logger.error("chmod +x install_picamera2.sh")
-                logger.error("./install_picamera2.sh")
-                logger.error("Or manually install with: sudo apt install -y python3-picamera2")
-                logger.error("After installation, you may need to reboot your Raspberry Pi.")
-                raise
+            from picamera2 import Picamera2
+            import time
             
             # Initialize picamera2
-            try:
-                picam2 = Picamera2()
-                logger.info("Picamera2 initialized successfully")
-            except Exception as e:
-                logger.error(f"Failed to initialize picamera2: {e}")
-                logger.error("Make sure your camera is properly connected and enabled.")
-                logger.error("Run: sudo raspi-config and enable the camera in Interface Options.")
-                raise
+            picam2 = Picamera2()
             
             # Configure camera
-            try:
-                config = picam2.create_preview_configuration(main=CAMERA_CONFIG['main'])
-                picam2.configure(config)
-                logger.info("Picamera2 configured successfully")
-            except Exception as e:
-                logger.error(f"Failed to configure picamera2: {e}")
-                picam2.close()
-                raise
+            config = picam2.create_preview_configuration(main=CAMERA_CONFIG['main'])
+            picam2.configure(config)
             
             # Start camera
-            try:
-                picam2.start()
-                logger.info("Picamera2 started successfully")
-            except Exception as e:
-                logger.error(f"Failed to start picamera2: {e}")
-                picam2.close()
-                raise
+            picam2.start()
+            logger.info("Picamera2 started successfully")
+            
+            # Initialize FPS counter
+            fps_counter = FPSCounter()
             
             try:
                 while True:
                     # Capture frame
-                    try:
-                        frame = picam2.capture_array()
-                    except Exception as e:
-                        logger.error(f"Failed to capture frame: {e}")
-                        continue
+                    frame = picam2.capture_array()
                     
-                    # Convert from RGB to BGR for OpenCV
+                    # Convert from RGB to BGR (OpenCV format)
                     frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
                     
                     # Process frame
                     processed_frame, detections = self.detect(frame)
                     
-                    # Display frame
-                    cv2.imshow('Road Sign Detection', processed_frame)
+                    # Update FPS counter
+                    fps = fps_counter.update()
+                    processed_frame = draw_fps(processed_frame, fps)
                     
-                    # Break loop on 'q' press
-                    if cv2.waitKey(1) & 0xFF == ord('q'):
-                        break
+                    # Save detections
+                    if detections:
+                        save_frame(processed_frame, detections[0])
+                    
+                    # Display frame if not in headless mode
+                    if not headless:
+                        cv2.imshow('Road Sign Detection', processed_frame)
                         
+                        # Break loop on 'q' press
+                        if cv2.waitKey(1) & 0xFF == ord('q'):
+                            break
+                    else:
+                        # In headless mode, just print FPS periodically
+                        if fps_counter.frame_count % 30 == 0:  # Print every 30 frames
+                            logger.info(f"FPS: {fps:.2f}")
+                    
             finally:
                 picam2.stop()
-                cv2.destroyAllWindows()
+                if not headless:
+                    cv2.destroyAllWindows()
+                logger.info("Picamera2 stopped")
                 
+        except ImportError:
+            logger.error("picamera2 not available. Please install it for Raspberry Pi support.")
+            raise
         except Exception as e:
-            logger.error(f"Error with picamera2: {e}")
-            logger.error("Falling back to OpenCV capture")
-            self._process_opencv_stream(0)
+            logger.error(f"Error processing picamera2 stream: {e}")
+            raise
             
-    def _process_opencv_stream(self, source: int = 0) -> None:
-        """Process video stream using OpenCV."""
+    def _process_opencv_stream(self, source: int = 0, headless: bool = False) -> None:
+        """
+        Process video stream using OpenCV.
+        
+        Args:
+            source: Camera index or video file path
+            headless: If True, run without displaying frames (useful for servers without display)
+        """
+        # Process video stream
         cap = cv2.VideoCapture(source)
         if not cap.isOpened():
             logger.error(f"Failed to open video source: {source}")
             return
-
+            
+        # Initialize FPS counter
+        fps_counter = FPSCounter()
+        
         try:
             while True:
                 ret, frame = cap.read()
                 if not ret:
                     logger.error("Failed to read frame")
                     break
-
+                    
                 # Process frame
                 processed_frame, detections = self.detect(frame)
                 
-                # Display frame
-                cv2.imshow('Road Sign Detection', processed_frame)
+                # Update FPS counter
+                fps = fps_counter.update()
+                processed_frame = draw_fps(processed_frame, fps)
                 
-                # Break loop on 'q' press
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
+                # Save detections
+                if detections:
+                    save_frame(processed_frame, detections[0])
+                
+                # Display frame if not in headless mode
+                if not headless:
+                    cv2.imshow('Road Sign Detection', processed_frame)
+                    
+                    # Break loop on 'q' press
+                    if cv2.waitKey(1) & 0xFF == ord('q'):
+                        break
+                else:
+                    # In headless mode, just print FPS periodically
+                    if fps_counter.frame_count % 30 == 0:  # Print every 30 frames
+                        logger.info(f"FPS: {fps:.2f}")
                     
         finally:
             cap.release()
-            cv2.destroyAllWindows() 
+            if not headless:
+                cv2.destroyAllWindows()
+            logger.info("Road sign detection stopped") 
