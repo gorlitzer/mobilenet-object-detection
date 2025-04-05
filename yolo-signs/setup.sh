@@ -33,10 +33,4 @@ fi
 echo "Downloading YOLOv8n model..."
 wget -O models/yolov8n.pt https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8n.pt
 
-# Create empty .env file if it doesn't exist
-if [ ! -f .env ]; then
-    cp .env.example .env
-    echo "Created .env file from .env.example"
-fi
-
 echo "Setup completed successfully!" 

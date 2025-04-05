@@ -4,14 +4,7 @@ from typing import Optional
 import logging
 import os
 from datetime import datetime
-import telegram
-from config import (
-    TELEGRAM_ENABLED,
-    TELEGRAM_BOT_TOKEN,
-    TELEGRAM_CHAT_ID,
-    NOTIFICATION_COOLDOWN,
-    DISPLAY_FPS,
-)
+from config import DISPLAY_FPS
 
 logger = logging.getLogger(__name__)
 
@@ -35,54 +28,6 @@ class FPSCounter:
             self.start_time = time.time()
             
         return self.fps
-
-class TelegramNotifier:
-    """Handle Telegram notifications for detected road signs."""
-    
-    def __init__(self):
-        self.last_notification_time = 0
-        self.bot = None
-        
-        if TELEGRAM_ENABLED:
-            try:
-                self.bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
-                logger.info("Telegram bot initialized successfully")
-            except Exception as e:
-                logger.error(f"Failed to initialize Telegram bot: {e}")
-                TELEGRAM_ENABLED = False
-    
-    def send_notification(self, detection: dict) -> None:
-        """
-        Send notification about detected road sign.
-        
-        Args:
-            detection: Dictionary containing detection information
-        """
-        if not TELEGRAM_ENABLED or not self.bot:
-            return
-            
-        current_time = time.time()
-        if current_time - self.last_notification_time < NOTIFICATION_COOLDOWN:
-            return
-            
-        try:
-            message = (
-                f"🚨 Road Sign Detected!\n"
-                f"Type: {detection['class']}\n"
-                f"Confidence: {detection['confidence']:.2f}\n"
-                f"Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
-            )
-            
-            self.bot.send_message(
-                chat_id=TELEGRAM_CHAT_ID,
-                text=message
-            )
-            
-            self.last_notification_time = current_time
-            logger.info(f"Sent Telegram notification for {detection['class']}")
-            
-        except Exception as e:
-            logger.error(f"Failed to send Telegram notification: {e}")
 
 def draw_fps(frame: cv2.Mat, fps: float) -> cv2.Mat:
     """

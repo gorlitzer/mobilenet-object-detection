@@ -39,12 +39,6 @@ FRAME_WIDTH = 640
 FRAME_HEIGHT = 480
 FPS = 30
 
-# Telegram configuration
-TELEGRAM_ENABLED = os.getenv('TELEGRAM_ENABLED', 'false').lower() == 'true'
-TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '')
-TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID', '')
-NOTIFICATION_COOLDOWN = int(os.getenv('NOTIFICATION_COOLDOWN', '60'))  # seconds
-
 # Display configuration
 DISPLAY_FPS = True
 DISPLAY_CONFIDENCE = True

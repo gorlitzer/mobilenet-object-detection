@@ -3,7 +3,7 @@ import logging
 import cv2
 import os
 from detector import RoadSignDetector
-from utils import FPSCounter, TelegramNotifier, draw_fps, save_frame
+from utils import FPSCounter, draw_fps, save_frame
 from config import DEFAULT_CAMERA_ID, USE_PICAMERA
 
 # Configure logging
@@ -36,7 +36,6 @@ def main():
     # Initialize components
     detector = RoadSignDetector()
     fps_counter = FPSCounter()
-    telegram_notifier = TelegramNotifier()
     
     # Determine if we should use picamera2
     use_picamera = args.use_picamera or USE_PICAMERA
@@ -78,13 +77,9 @@ def main():
                 fps = fps_counter.update()
                 processed_frame = draw_fps(processed_frame, fps)
                 
-                # Handle detections
-                for detection in detections:
-                    # Save frame with detection
-                    save_frame(processed_frame, detection)
-                    
-                    # Send Telegram notification
-                    telegram_notifier.send_notification(detection)
+                # Save detections
+                if detections:
+                    save_frame(processed_frame, detections[0])
                 
                 # Display frame
                 cv2.imshow('Road Sign Detection', processed_frame)
