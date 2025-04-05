@@ -22,7 +22,7 @@ A simple web server that streams video from a Raspberry Pi camera with YOLO obje
 
 2. Create a virtual environment and activate it:
 ```bash
-python -m venv venv
+python -m venv --system-site-packages venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 

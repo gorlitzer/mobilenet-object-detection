@@ -18,6 +18,7 @@ from picamera2 import Picamera2
 from picamera2.encoders import JpegEncoder
 from picamera2.outputs import FileOutput
 from ultralytics import YOLO
+import io
 
 # Configure logging
 logging.basicConfig(
@@ -83,16 +84,30 @@ HTML_TEMPLATE = """
 </html>
 """
 
-class StreamingOutput:
+class StreamingOutput(io.BufferedIOBase):
     """Class to handle streaming output."""
     def __init__(self):
         self.frame = None
         self.condition = threading.Condition()
+        self._buffer = io.BytesIO()
 
     def write(self, buf):
         with self.condition:
             self.frame = buf
             self.condition.notify_all()
+        return len(buf)
+
+    def read(self, size=-1):
+        return self._buffer.read(size)
+
+    def readable(self):
+        return True
+
+    def writable(self):
+        return True
+
+    def seekable(self):
+        return False
 
 class StreamingHandler(BaseHTTPRequestHandler):
     """HTTP request handler for streaming video."""
